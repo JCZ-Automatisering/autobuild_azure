@@ -1,4 +1,5 @@
 import helpers
+from docker import Docker
 
 
 class Step:
@@ -6,7 +7,14 @@ class Step:
         self.name = name
         self.action = action
 
-    def execute(self, context = None):
+    def __execute_in_context(self, context):
+        docker = Docker(context)
+        docker.run_once(self.action)
+
+    def execute(self, context=None):
+        if context:
+            return self.__execute_in_context(context)
+
         helpers.execute(self.action, True)
         return True
 
