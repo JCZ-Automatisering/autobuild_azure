@@ -30,3 +30,12 @@ def execute_get_value(cmd):
         text=True
     )
     return result.stdout
+
+
+def get_current_user_id():
+    value = execute_get_value("id -u")
+    return int(value)
+
+def get_current_group_id():
+    value = execute_get_value("id -g")
+    return int(value)

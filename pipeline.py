@@ -1,3 +1,5 @@
+import os
+
 from job import Job
 from step import Step
 from helpers import fatal_error, execute
@@ -72,8 +74,10 @@ class Pipeline:
 
         return True
 
-    def execute(self):
+    def execute(self, context=None):
         for job in self.jobs:
+            if context:
+                job.context = context
             print(f"Executing job {job.name}...")
 
             if not job.run_steps():

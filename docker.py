@@ -1,5 +1,7 @@
 import os
-from sys import intern
+import tempfile
+
+import helpers
 from helpers import execute
 
 
@@ -8,6 +10,13 @@ class Docker:
         self.name = name
         self.volumes = ["/etc/passwd", "/etc/group", "/tmp"]
         self.interactive = False
+        self.__docker_script_obj = tempfile.NamedTemporaryFile()
+        self.__docker_script = self.__docker_script_obj.name
+        self.volumes.append(self.__docker_script)
+
+    def build(self, dockerfile):
+        cmd = f"docker build -t {self.name} -f {dockerfile} ."
+        execute(cmd, verbose=True)
 
     def start(self):
         pass
@@ -25,7 +34,7 @@ class Docker:
 
         return output
 
-    def __build_docker_cmd(self, cmd, image):
+    def __build_docker_base(self, image, root=False):
         if self.interactive:
             interactive_flag = "-it"
         else:
@@ -33,9 +42,22 @@ class Docker:
 
         volumes = self.__build_volumes_args()
 
-        cmd = f"docker run {interactive_flag} --rm {volumes} {image} {cmd}"
+        if root:
+            uid = 0
+            gid = 0
+        else:
+            uid = helpers.get_current_user_id()
+            gid = helpers.get_current_group_id()
+
+        cmd = f"docker run {interactive_flag} --hostname {self.name} --rm --user {uid}:{gid} {volumes} {image}"
         return cmd
 
-    def run_once(self, cmd):
-        final_cmd = self.__build_docker_cmd(cmd, self.name)
+    def run_once(self, cmd, root=False):
+        final_cmd = self.__build_docker_base(image=self.name, root=root)
+
+        script_content = f"#!/bin/sh\n\n{cmd}\n"
+        open(self.__docker_script, "w").write(script_content)
+
+        final_cmd += f" /bin/sh {self.__docker_script}"
+
         execute(final_cmd, verbose=True)

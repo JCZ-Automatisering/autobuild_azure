@@ -1,4 +1,4 @@
-import helpers
+import os
 
 from step import Step
 
@@ -12,7 +12,11 @@ class Job:
         self.steps.append(step)
 
     def run_steps(self):
+        skip = os.getenv("SKIP").split(",")
         for step in self.steps:
+            if step.action in skip:
+                print(f" skipping step {step} due to SKIP environment variable")
+                continue
             if not step.execute(self.context):
                 print(f"Step {step.name} failed")
                 return False
