@@ -12,7 +12,7 @@ class Job:
         self.steps.append(step)
 
     def run_steps(self):
-        skip = os.getenv("SKIP").split(",")
+        skip = os.getenv("SKIP", "").split(",")
         for step in self.steps:
             if step.action in skip:
                 print(f" skipping step {step} due to SKIP environment variable")

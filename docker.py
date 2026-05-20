@@ -60,4 +60,5 @@ class Docker:
 
         final_cmd += f" /bin/sh {self.__docker_script}"
 
+        print(f"docker step script: {cmd}")
         execute(final_cmd, verbose=True)
