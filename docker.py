@@ -52,7 +52,12 @@ class Docker:
         cmd = f"docker run {interactive_flag} --hostname {self.name} --rm --user {uid}:{gid} {volumes} {image}"
         return cmd
 
-    def run_once(self, cmd, root=False):
+    def run_once(self, cmd, root=False, interactive=False):
+        if interactive:
+            self.interactive = True
+        else:
+            self.interactive = False
+
         final_cmd = self.__build_docker_base(image=self.name, root=root)
 
         script_content = f"#!/bin/sh\n\n{cmd}\n"
@@ -61,4 +66,4 @@ class Docker:
         final_cmd += f" /bin/sh {self.__docker_script}"
 
         print(f"docker step script: {cmd}")
-        execute(final_cmd, verbose=True)
+        return execute(final_cmd, verbose=True, no_fatal=True)

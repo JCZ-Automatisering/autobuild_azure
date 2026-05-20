@@ -4,6 +4,7 @@ import configparser
 MAIN_SECTION = "main"
 DOCKERFILE_KEY = "dockerfile"
 NAME_KEY = "name"
+INTERACTIVE_SHELL_KEY = "interactive_shell"
 
 
 class Config:
@@ -13,3 +14,4 @@ class Config:
         main_section = c[MAIN_SECTION]
         self.dockerfile = main_section[DOCKERFILE_KEY] or ""
         self.name = main_section[NAME_KEY] or "autobuild"
+        self.interactive_shell = main_section[INTERACTIVE_SHELL_KEY] or "/bin/sh"

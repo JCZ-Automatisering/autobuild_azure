@@ -3,6 +3,7 @@
 import yaml
 import os
 from config import Config
+import sys
 
 import helpers
 from pipeline import Pipeline
@@ -32,6 +33,10 @@ def main():
     if config.dockerfile:
         docker = Docker(config.name)
         docker.build(config.dockerfile)
+
+        if "shell" in sys.argv:
+            docker.run_once(config.interactive_shell, interactive=True)
+            return
     else:
         docker = None
 

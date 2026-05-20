@@ -9,7 +9,7 @@ class Step:
 
     def __execute_in_context(self, context):
         docker = Docker(context)
-        docker.run_once(self.action)
+        return docker.run_once(self.action)
 
     def execute(self, context=None):
         if context:
