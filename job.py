@@ -13,11 +13,16 @@ class Job:
 
     def run_steps(self):
         skip = os.getenv("SKIP", "").split(",")
+        no_docker = os.getenv("NO_DOCKER", "").split(",")
         for step in self.steps:
-            if step.action in skip:
+            if step.name in skip:
                 print(f" skipping step {step} due to SKIP environment variable")
                 continue
-            if not step.execute(self.context):
+            if step.name in no_docker:
+                context = None
+            else:
+                context = self.context
+            if not step.execute(context):
                 print(f"Step {step.name} failed")
                 return False
 

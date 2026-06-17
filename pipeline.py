@@ -13,6 +13,8 @@ TASK_TAG = "task"
 INPUTS_TAG = "inputs"
 CONTAINER_TAG = "container"
 IMAGE_TAG = "image"
+NAME_TAG = "name"
+
 
 DOCKER_COMMAND_TAG = "command"
 DOCKER_IMAGE_TAG = "imageName"
@@ -55,10 +57,15 @@ class Pipeline:
 
             steps = item[STEPS_TAG]
             for step in steps:
+                if NAME_TAG in step:
+                    step_name = step[NAME_TAG]
+                else:
+                    step_name = f"job_{name}_step_{number}"
+
                 if SCRIPT_TAG in step:
                     # we are only interested in script tags
                     data = step[SCRIPT_TAG]
-                    job_step = Step(f"job_{name}_step_{number}", data)
+                    job_step = Step(step_name, data)
                     job.add_step(job_step)
                 elif TASK_TAG in step and INPUTS_TAG in step:
                     task = step[TASK_TAG]

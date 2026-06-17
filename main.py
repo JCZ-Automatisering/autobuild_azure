@@ -10,10 +10,10 @@ from pipeline import Pipeline
 from docker import Docker
 
 
-VERSION = 1
+VERSION = 2
 
 
-PIPELINE_FILENAME = "azure-pipelines.yml"
+PIPELINE_FILENAME = os.getenv("PIPELINE", "azure-pipelines.yml")
 AUTOBUILD_CONFIG = "autobuild.ini"
 
 
@@ -31,6 +31,7 @@ def main():
 
     config = Config(AUTOBUILD_CONFIG)
     if config.dockerfile:
+        config.dockerfile = os.getenv("DOCKERFILE", config.dockerfile)
         docker = Docker(config.name)
         docker.build(config.dockerfile)
 
