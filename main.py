@@ -10,19 +10,15 @@ from pipeline import Pipeline
 from docker import Docker
 
 
-VERSION = 2
+VERSION = 3
 
 
-PIPELINE_FILENAME = os.getenv("PIPELINE", "azure-pipelines.yml")
 AUTOBUILD_CONFIG = "autobuild.ini"
-
-
-
+SHELL_KEY = "shell"
 
 
 def main():
     check_files = {
-        PIPELINE_FILENAME: f"Pipeline file {PIPELINE_FILENAME} not found in pwd",
         AUTOBUILD_CONFIG: f"Autobuild configuration file {AUTOBUILD_CONFIG} not found in pwd"
     }
     for item in check_files:
@@ -30,24 +26,31 @@ def main():
             helpers.fatal_error(check_files[item])
 
     config = Config(AUTOBUILD_CONFIG)
-    if config.dockerfile:
-        config.dockerfile = os.getenv("DOCKERFILE", config.dockerfile)
-        docker = Docker(config.name)
-        docker.build(config.dockerfile)
+    profile = config.get_default()
+    if len(sys.argv) > 1:
+        profile_name = sys.argv[1]
+        if not profile_name == SHELL_KEY:
+            profile = config.get_profile(profile_name)
 
-        if "shell" in sys.argv:
-            docker.run_once(config.interactive_shell, interactive=True)
-            return
-    else:
-        docker = None
+    if not profile:
+        helpers.fatal_error(f"Could not load profile!")
 
-    data = yaml.load(open(PIPELINE_FILENAME), Loader=yaml.FullLoader)
+    # todo: make docker optional again?
+    docker = Docker(profile.name)
+    docker.build(profile.dockerfile)
+    if SHELL_KEY in sys.argv:
+        docker.run_once(profile.interactive_shell, interactive=True)
+        return
+    # else:
+    #     docker = None
+
+    data = yaml.load(open(profile.pipeline), Loader=yaml.FullLoader)
     pipeline = Pipeline(data)
 
     if not pipeline.configure():
         helpers.fatal_error("Pipeline setup failed!")
 
-    if not pipeline.execute(config.name if docker else None):
+    if not pipeline.execute(profile.name if docker else None):
         helpers.fatal_error("Pipeline execute failed!")
 
     print("\npipeline okay!\n")

@@ -39,3 +39,10 @@ def get_current_user_id():
 def get_current_group_id():
     value = execute_get_value("id -g")
     return int(value)
+
+def config_section_has_all_keys(section_object, keys):
+    for key in keys:
+        if key not in section_object:
+            return False
+
+    return True
