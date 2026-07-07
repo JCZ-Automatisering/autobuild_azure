@@ -12,16 +12,18 @@ DOCKERFILE_KEY = "dockerfile"
 PIPELINEFILE_KEY = "pipeline"
 NAME_KEY = "name"
 INTERACTIVE_SHELL_KEY = "interactive_shell"
+MOUNT_HOME_KEY = "mount_home"
 
 PROFILE_MANDATORY_KEYS = (DOCKERFILE_KEY, PIPELINEFILE_KEY)
 
 
 class Profile:
-    def __init__(self, name, dockerfile, pipeline, interactive_shell):
+    def __init__(self, name, dockerfile, pipeline, interactive_shell, mount_home):
         self.name = name
         self.dockerfile = dockerfile
         self.pipeline = pipeline
         self.interactive_shell = interactive_shell
+        self.mount_home = mount_home
 
 
 class Config:
@@ -40,16 +42,26 @@ class Config:
             if helpers.config_section_has_all_keys(section_object, PROFILE_MANDATORY_KEYS):
                 dockerfile = section_object[DOCKERFILE_KEY]
                 pipeline = section_object[PIPELINEFILE_KEY]
-                if INTERACTIVE_SHELL_KEY in section_object:
-                    shell = section_object[INTERACTIVE_SHELL_KEY]
-                else:
-                    shell = DEFAULT_INTERACTIVE_SHELLL
+                shell = self.__get_key_value(section_object, INTERACTIVE_SHELL_KEY, DEFAULT_INTERACTIVE_SHELLL)
+                mount_home = self.__get_key_value_boolean(section_object, MOUNT_HOME_KEY, False)
 
-                profile = Profile(section, dockerfile, pipeline, shell)
+                profile = Profile(section, dockerfile, pipeline, shell, mount_home)
                 self.__profiles.append(profile)
                 print(f" added profile {section}")
             else:
                 print(f"WARNING: Section {section} does not have all mandatory keys, ignoring...")
+
+    @staticmethod
+    def __get_key_value(section_object, key, default_value=None):
+        if key in section_object:
+            return section_object[key]
+        return default_value
+
+    @staticmethod
+    def __get_key_value_boolean(action_object, key, default_value=False):
+        value = Config.__get_key_value(action_object, key, default_value)
+        return helpers.string_to_boolean(value)
+
 
     def get_profile(self, profile) -> Profile:
         for item in self.__profiles:

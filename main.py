@@ -10,7 +10,7 @@ from pipeline import Pipeline
 from docker import Docker
 
 
-VERSION = 3
+VERSION = 4
 
 
 AUTOBUILD_CONFIG = "autobuild.ini"
@@ -36,7 +36,7 @@ def main():
         helpers.fatal_error(f"Could not load profile!")
 
     # todo: make docker optional again?
-    docker = Docker(profile.name)
+    docker = Docker(profile.name, profile.mount_home)
     docker.build(profile.dockerfile)
     if SHELL_KEY in sys.argv:
         docker.run_once(profile.interactive_shell, interactive=True)

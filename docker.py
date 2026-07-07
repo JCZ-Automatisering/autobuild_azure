@@ -3,16 +3,18 @@ import tempfile
 
 import helpers
 from helpers import execute
+from pathlib import Path
 
 
 class Docker:
-    def __init__(self, name):
+    def __init__(self, name, mount_home=False):
         self.name = name
         self.volumes = ["/etc/passwd", "/etc/group", "/tmp"]
         self.interactive = False
         self.__docker_script_obj = tempfile.NamedTemporaryFile()
         self.__docker_script = self.__docker_script_obj.name
         self.volumes.append(self.__docker_script)
+        self.mount_home = mount_home
 
     def build(self, dockerfile):
         cmd = f"docker build -t {self.name} -f {dockerfile} ."
@@ -28,6 +30,10 @@ class Docker:
         output = ""
         for item in self.volumes:
             output += f"-v {item}:{item} "
+
+        if self.mount_home:
+            home_dir = Path.home()
+            output += f" -v {home_dir}:{home_dir} "
 
         cur_dir = os.path.abspath(os.curdir)
         output += f"-v {cur_dir}:{cur_dir} -w {cur_dir}"

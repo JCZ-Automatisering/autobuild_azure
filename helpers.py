@@ -46,3 +46,13 @@ def config_section_has_all_keys(section_object, keys):
             return False
 
     return True
+
+
+__TRUE_VALUES = ("yes", "true", "1", "on")
+
+def string_to_boolean(value):
+    lower_value = value.lower()
+    if lower_value in __TRUE_VALUES:
+        return True
+
+    return False
