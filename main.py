@@ -50,7 +50,7 @@ def main():
     if not pipeline.configure():
         helpers.fatal_error("Pipeline setup failed!")
 
-    if not pipeline.execute(profile.name if docker else None):
+    if not pipeline.execute(docker):
         helpers.fatal_error("Pipeline execute failed!")
 
     print("\npipeline okay!\n")

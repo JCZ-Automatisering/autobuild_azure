@@ -8,8 +8,7 @@ class Step:
         self.action = action
 
     def __execute_in_context(self, context):
-        docker = Docker(context)
-        return docker.run_once(self.action)
+        return context.run_once(self.action)
 
     def execute(self, context=None):
         if context:

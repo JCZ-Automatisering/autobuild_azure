@@ -85,7 +85,7 @@ class Pipeline:
         for job in self.jobs:
             if context:
                 job.context = context
-            print(f"Executing job {job.name}...")
+            print(f"Executing job {job.name} (context={context.name})...")
 
             if not job.run_steps():
                 print(f"Job {job.name} failed")
