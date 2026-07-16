@@ -60,7 +60,9 @@ class Config:
     @staticmethod
     def __get_key_value_boolean(action_object, key, default_value=False):
         value = Config.__get_key_value(action_object, key, default_value)
-        return helpers.string_to_boolean(value)
+        if type(value) == str:
+            return helpers.string_to_boolean(value)
+        return value
 
 
     def get_profile(self, profile) -> Profile:
