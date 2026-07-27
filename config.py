@@ -60,13 +60,18 @@ class Config:
             return
 
         with open(file) as f:
+            print(f"as requested (see {file}), skipping steps:")
             skip_list = ""
             for line in f.readlines():
-                skip_list = f"{skip_list},{line.strip()}"
+                line = line.strip()
+                skip_list = f"{skip_list},{line}"
+                print(f"   step: {line}")
 
             if skip_list:
                 result = skip_list[1:]
                 os.environ["SKIP"] = result
+
+            print("")
 
     @staticmethod
     def __get_key_value(section_object, key, default_value=None):
