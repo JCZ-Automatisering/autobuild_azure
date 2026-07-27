@@ -1,4 +1,5 @@
 import configparser
+import os.path
 
 import helpers
 
@@ -27,12 +28,14 @@ class Profile:
 
 
 class Config:
-    def __init__(self, config_file):
+    def __init__(self, config_file, skip_file):
         self.__profiles = []
         c = configparser.ConfigParser()
         c.read(config_file)
         main_section = c[MAIN_SECTION]
         self.default = main_section[DEFAULT_KEY]
+
+        self.__handle_autoskip(skip_file)
 
         for section in c.sections():
             if section == MAIN_SECTION:
@@ -50,6 +53,20 @@ class Config:
                 print(f" added profile {section}")
             else:
                 print(f"WARNING: Section {section} does not have all mandatory keys, ignoring...")
+
+    @staticmethod
+    def __handle_autoskip(file):
+        if not os.path.exists(file):
+            return
+
+        with open(file) as f:
+            skip_list = ""
+            for line in f.readlines():
+                skip_list = f"{skip_list},{line.strip()}"
+
+            if skip_list:
+                result = skip_list[1:]
+                os.environ["SKIP"] = result
 
     @staticmethod
     def __get_key_value(section_object, key, default_value=None):

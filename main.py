@@ -10,10 +10,11 @@ from pipeline import Pipeline
 from docker import Docker
 
 
-VERSION = 4
+VERSION = 5
 
 
 AUTOBUILD_CONFIG = "autobuild.ini"
+AUTOBUILD_AUTOSKIP_FILE = ".autobuild_auto_skip"
 SHELL_KEY = "shell"
 
 
@@ -25,7 +26,7 @@ def main():
         if not os.path.exists(item):
             helpers.fatal_error(check_files[item])
 
-    config = Config(AUTOBUILD_CONFIG)
+    config = Config(AUTOBUILD_CONFIG, AUTOBUILD_AUTOSKIP_FILE)
     profile = config.get_default()
     if len(sys.argv) > 1:
         profile_name = sys.argv[1]
