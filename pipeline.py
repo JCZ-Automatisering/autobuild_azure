@@ -38,15 +38,35 @@ class Pipeline:
         cmd = f"docker build -t {name} -f {input_file} ."
         return execute(cmd, verbose=True, no_fatal=True)
 
+    def configure_job_steps(self, job, steps):
+        number = 1
+        for step in steps:
+            if NAME_TAG in step:
+                step_name = step[NAME_TAG]
+            else:
+                step_name = f"job_{job.name}_step_{number}"
 
-    def configure(self):
-        c = self.configuration
-        if JOBS_TAG not in c:
-            return False
+            number += 1
 
-        jobs = c[JOBS_TAG]
+            if SCRIPT_TAG in step:
+                # we are only interested in script tags
+                data = step[SCRIPT_TAG]
+                job_step = Step(step_name, data)
+                job.add_step(job_step)
+            elif TASK_TAG in step and INPUTS_TAG in step:
+                task = step[TASK_TAG]
+                data = step[INPUTS_TAG]
+                if task == "Docker@2":
+                    if data[DOCKER_COMMAND_TAG] == "build":
+                        dockerfile = data[DOCKER_FILE_TAG]
+                        tag = data[DOCKER_TAGS_TAG]
+                        if not self.__process_docker_build(dockerfile, tag):
+                            fatal_error(f"Dockerfile {dockerfile} could not be build!")
+
+        self.jobs.append(job)
+
+    def configure_with_jobs(self, jobs):
         for item in jobs:
-            number = 0
             name = item[JOB_NAME_TAG]
             context = None
             if CONTAINER_TAG in item:
@@ -55,30 +75,18 @@ class Pipeline:
 
             job = Job(name, context)
 
-            steps = item[STEPS_TAG]
-            for step in steps:
-                if NAME_TAG in step:
-                    step_name = step[NAME_TAG]
-                else:
-                    step_name = f"job_{name}_step_{number}"
+            self.configure_job_steps(job, item[STEPS_TAG])
 
-                if SCRIPT_TAG in step:
-                    # we are only interested in script tags
-                    data = step[SCRIPT_TAG]
-                    job_step = Step(step_name, data)
-                    job.add_step(job_step)
-                elif TASK_TAG in step and INPUTS_TAG in step:
-                    task = step[TASK_TAG]
-                    data = step[INPUTS_TAG]
-                    if task == "Docker@2":
-                        if data[DOCKER_COMMAND_TAG] == "build":
-                            dockerfile = data[DOCKER_FILE_TAG]
-                            tag = data[DOCKER_TAGS_TAG]
-                            if not self.__process_docker_build(dockerfile, tag):
-                                fatal_error(f"Dockerfile {dockerfile} could not be build!")
 
-            self.jobs.append(job)
+        return True
 
+    def configure(self):
+        c = self.configuration
+        if JOBS_TAG in c:
+            return self.configure_with_jobs(c[JOBS_TAG])
+
+        job = Job("default", None)  # todo - None -> take from pipeline
+        self.configure_job_steps(job, c[STEPS_TAG])
         return True
 
     def execute(self, context=None):
