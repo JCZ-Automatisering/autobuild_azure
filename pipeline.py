@@ -1,4 +1,4 @@
-import os
+import re
 
 from job import Job
 from step import Step
@@ -14,12 +14,16 @@ INPUTS_TAG = "inputs"
 CONTAINER_TAG = "container"
 IMAGE_TAG = "image"
 NAME_TAG = "name"
+VARIABLES_TAG = "variables"
 
 
 DOCKER_COMMAND_TAG = "command"
 DOCKER_IMAGE_TAG = "imageName"
 DOCKER_FILE_TAG = "dockerfile"
 DOCKER_TAGS_TAG = "tags"
+
+
+_VAR_RE = re.compile(r"\$\(([A-Za-z_][A-Za-z0-9_.-]*)\)")
 
 
 class Pipeline:
@@ -29,6 +33,30 @@ class Pipeline:
             fatal_error("Pipeline configuration is empty!")
         self.configuration = configuration
         self.context = None
+        self.variables = {}
+        self.__process_variables()
+
+    def __process_variables(self):
+        if VARIABLES_TAG not in self.configuration:
+            return      # no variables
+
+        p_vars = self.configuration[VARIABLES_TAG]
+        for item in p_vars:
+            self.__process_variable(item, p_vars[item])
+
+    def __expand(self, text):
+        def _repl(m: re.Match) -> str:
+            name = m.group(1)
+            try:
+                return str(self.variables[name])
+            except KeyError:
+                raise KeyError(f"undefined variable $({name})") from None
+
+        return _VAR_RE.sub(_repl, text)
+
+    def __process_variable(self, name, value):
+        final_value = self.__expand(value)
+        self.variables[name] = final_value
 
     def __process_job_step(self, step, job):
         pass
@@ -51,7 +79,8 @@ class Pipeline:
             if SCRIPT_TAG in step:
                 # we are only interested in script tags
                 data = step[SCRIPT_TAG]
-                job_step = Step(step_name, data)
+                final_data = self.__expand(data)
+                job_step = Step(step_name, final_data)
                 job.add_step(job_step)
             elif TASK_TAG in step and INPUTS_TAG in step:
                 task = step[TASK_TAG]

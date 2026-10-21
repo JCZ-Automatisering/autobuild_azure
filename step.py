@@ -1,5 +1,4 @@
 import helpers
-from docker import Docker
 
 
 class Step:
