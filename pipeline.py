@@ -47,10 +47,9 @@ class Pipeline:
     def __expand(self, text):
         def _repl(m: re.Match) -> str:
             name = m.group(1)
-            try:
-                return str(self.variables[name])
-            except KeyError:
-                raise KeyError(f"undefined variable $({name})") from None
+            if name not in self.variables:
+                return f"$(name)"     # we don't know this variable, just return the text and ignore
+            return str(self.variables[name])
 
         return _VAR_RE.sub(_repl, text)
 

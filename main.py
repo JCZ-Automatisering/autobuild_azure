@@ -10,7 +10,7 @@ from pipeline import Pipeline
 from docker import Docker
 
 
-VERSION = 8
+VERSION = 9
 
 
 AUTOBUILD_CONFIG = "autobuild.ini"
