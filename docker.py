@@ -7,9 +7,10 @@ from pathlib import Path
 
 
 class Docker:
-    def __init__(self, name, mount_home=False):
+    def __init__(self, name, mount_home=False, environment={}):
         self.name = name
         self.volumes = ["/etc/passwd", "/etc/group", "/tmp"]
+        self.environment = environment
         self.interactive = False
         self.__docker_script_obj = tempfile.NamedTemporaryFile()
         self.__docker_script = self.__docker_script_obj.name
@@ -40,6 +41,12 @@ class Docker:
 
         return output
 
+    def __build_docker_env(self):
+        return " ".join(
+            f"-e {key}={value.replace('=', '\\=').replace(' ', '\\ ')}"
+            for key, value in self.environment.items()
+        )
+
     def __build_docker_base(self, image, root=False):
         if self.interactive:
             interactive_flag = "-it"
@@ -47,6 +54,7 @@ class Docker:
             interactive_flag = ""
 
         volumes = self.__build_volumes_args()
+        env = self.__build_docker_env()
 
         if root:
             uid = 0
@@ -55,7 +63,7 @@ class Docker:
             uid = helpers.get_current_user_id()
             gid = helpers.get_current_group_id()
 
-        cmd = f"docker run {interactive_flag} --hostname {self.name} --rm --user {uid}:{gid} {volumes} {image}"
+        cmd = f"docker run {interactive_flag} --hostname {self.name} --rm --user {uid}:{gid} {env} {volumes} {image}"
         return cmd
 
     def run_once(self, cmd, root=False, interactive=False):

@@ -2,23 +2,27 @@
 
 import yaml
 import os
+
 from config import Config
 import sys
 
 import helpers
 from pipeline import Pipeline
 from docker import Docker
+from environment import Environment
 
 
-VERSION = 9
+VERSION = 10
 
 
 AUTOBUILD_CONFIG = "autobuild.ini"
 AUTOBUILD_AUTOSKIP_FILE = ".autobuild_auto_skip"
+AUTOBUILD_ENVIRONMENT_FILE = ".autobuild_environment"
 SHELL_KEY = "shell"
 
 
 def main():
+    print(f"Autobuild azure, version {VERSION}\n")
     check_files = {
         AUTOBUILD_CONFIG: f"Autobuild configuration file {AUTOBUILD_CONFIG} not found in pwd"
     }
@@ -36,8 +40,10 @@ def main():
     if not profile:
         helpers.fatal_error(f"Could not load profile!")
 
+    environment = Environment(AUTOBUILD_ENVIRONMENT_FILE)
+
     # todo: make docker optional again?
-    docker = Docker(profile.name, profile.mount_home)
+    docker = Docker(profile.name, profile.mount_home, environment.environment)
     docker.build(profile.dockerfile)
     if SHELL_KEY in sys.argv:
         docker.run_once(profile.interactive_shell, interactive=True)
